@@ -16,4 +16,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://pnr-svc:$HF_TOKEN@huggingface.co/spaces/pnr-svc/sentiment-analysis main
+        run: git push --force https://pnr-svc:$HF_TOKEN@huggingface.co/spaces/pnr-svc/sentiment main
