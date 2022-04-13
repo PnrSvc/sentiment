@@ -1,5 +1,5 @@
-pandas
-numpy
-re
 streamlit
-transformers
+opencv-python-headless
+numpy
+easyocr
+Pillow
