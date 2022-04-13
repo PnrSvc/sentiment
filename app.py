@@ -1,47 +1,47 @@
-import easyocr as ocr  #OCR
-import streamlit as st  #Web App
-from PIL import Image #Image Processing
-import numpy as np #Image Processing 
+import pandas as pd
+import numpy as np
+import re
+import streamlit as st
+from transformers import pipeline
+sentiment = pipeline(
+    "sentiment-analysis",
+    model="distilbert-base-turkish-cased",
+    tokenizer="distilbert-base-turkish-cased",
+)
+#Function
+def data_import():
+    df_comment = pd.read_csv('df_comment.csv')
+    return df_comment
+    
+def df_sentiment(df_comment):
+  preds = sentiment(df_comment)
+  pred_sentiment = preds[0]["label"]
+  pred_score = preds[0]["score"]
+  return pred_sentiment, pred_score
+def sentiment_analysis(preds):
+  for i, (label, score) in enumerate(zip(preds["labels"], preds["scores"])):
+        if score < 0.5:
+            preds["labels"][i] = "neutral"
+            preds["scores"][i] = 1.0 - score
 
-#title
-st.title("Easy OCR - Extract Text from Images")
-
-#subtitle
-st.markdown("## Opticalling Character Recognition - Using `easyocr`, `streamlit` -  hosted on 🤗 Spaces")
-
-st.markdown("Link to the app - [image-to-text-app on 🤗 Spaces](https://huggingface.co/spaces/Amrrs/image-to-text-app)")
-
-#image uploader
-image = st.file_uploader(label = "Upload your image here",type=['png','jpg','jpeg'])
-
-
-@st.cache
-def load_model(): 
-    reader = ocr.Reader(['en'],model_storage_directory='.')
-    return reader 
-
-reader = load_model() #load model
-
-if image is not None:
-
-    input_image = Image.open(image) #read image
-    st.image(input_image) #display image
-
-    with st.spinner("🤖 AI is at Work! "):
-        
-
-        result = reader.readtext(np.array(input_image))
-
-        result_text = [] #empty list for results
-
-
-        for text in result:
-            result_text.append(text[1])
-
-        st.write(result_text)
-    #st.success("Here you go!")
-    st.balloons()
-else:
-    st.write("Upload an Image")
-
-st.caption("Made with ❤️ by @1littlecoder. Credits to 🤗 Spaces for Hosting this ")
+def clean_text(text):
+    text = text.encode("ascii", errors="ignore").decode(
+        "ascii"
+    )
+    text = text.lower()
+    text = re.sub(r"\n", " ", text)
+    text = re.sub(r"\n\n", " ", text)
+    text = re.sub(r"\t", " ", text)
+    text = text.strip(" ")
+    text = re.sub(r"[^\w\s]", "", text)  # remove punctuation and special characters
+    text = re.sub(
+        " +", " ", text
+    ).strip()
+    return text    
+iface = gr.Interface(fn = df_sentiment, 
+                     inputs = "text", 
+                     outputs = ['text'],
+                     title = 'Sentiment Analysis', 
+                     description="Get Sentiment Negative/Positive/Neutral for the given input")
+                     
+iface.launch(inline = False)
